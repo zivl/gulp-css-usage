@@ -1,0 +1,48 @@
+{
+  "name": "gulp-css-usage",
+  "version": "1.0.8",
+  "description": "A Gulp task which scans your react classes ( .js / .jsx ), your CSS files, and gives you a report of CSS coverage. .i.e how many class names are needless and which are those class names",
+  "keywords": [
+    "gulpplugin",
+    "gulp",
+    "react",
+    "jsx",
+    "css",
+    "usage",
+    "className",
+    "class",
+    "classes"
+  ],
+  "license": "MIT",
+  "author": "Ziv Levy (https://github.com/zivl)",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/zivl/gulp-css-usage",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zivl/gulp-css-usage.git"
+  },
+  "scripts": {
+    "test": "npm run-script build && mocha",
+    "prepublish": "npm run-script build",
+    "build": "babel index.js --out-dir dist"
+  },
+  "bugs": {
+    "url": "https://github.com/zivl/gulp-css-usage/issues"
+  },
+  "dependencies": {
+    "babel-traverse": "^6.4.5",
+    "babylon": "^6.4.5",
+    "through2": "^2.0.0",
+    "gulp-util": "^3.0.7"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.4.5",
+    "babel-core": "^6.4.5",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-register": "^6.4.3",
+    "chai": "^3.5.0",
+    "gulp": "^3.9.0",
+    "mocha": "^2.4.5",
+    "should": "^8.2.1"
+  }
+}
