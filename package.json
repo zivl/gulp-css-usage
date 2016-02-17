@@ -1,7 +1,7 @@
 {
   "name": "gulp-css-usage",
-  "version": "1.0.8",
-  "description": "A Gulp task which scans your react classes ( .js / .jsx ), your CSS files, and gives you a report of CSS coverage. .i.e how many class names are needless and which are those class names",
+  "version": "1.0.9",
+  "description": "A Gulp task which scans your JavaScript classes, including React JSX files support (.jsx/.js), your CSS files, and gives you a report of CSS coverage. i.e how many class names are needless and which are those class names.",
   "keywords": [
     "gulpplugin",
     "gulp",
@@ -9,7 +9,6 @@
     "jsx",
     "css",
     "usage",
-    "className",
     "class",
     "classes"
   ],

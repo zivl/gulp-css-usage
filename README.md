@@ -58,6 +58,7 @@ For trouble in usage or unclear stuff, please use the awesome [StackOverflow](ht
 
 # Road map
 * write results to file
+* support of more CSS selectors, such as `#`,
 * support multiple CSS files
 * support of precompiled SCSS files as well
 

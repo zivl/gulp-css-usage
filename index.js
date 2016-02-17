@@ -36,7 +36,7 @@ let makeDiff = (cssClasses, jsxClasses) => {
 
 let printNeedlessClassList = (list) => {
 	gutil.log('');
-	gutil.log(gutil.colors.yellow('gulp-css-usage report: The following class names are not in use'));
+	gutil.log(gutil.colors.yellow(PLUGIN_NAME + ': The following class names are not in use'));
 	list.forEach(clazz => gutil.log(clazz));
 	gutil.log('');
 };
@@ -89,6 +89,7 @@ let gulpCssUsage = (options = {}) => {
 			cb(error, file);
 		}
 		if (file.isStream()) {
+			gutil.log(gutil.colors.magenta(PLUGIN_NAME + ': streaming is deprecated and will not be supported soon'));
 			if (enc !== 'utf8') {
 				file.contents.setEncoding('utf8');
 			}
@@ -103,7 +104,6 @@ let gulpCssUsage = (options = {}) => {
 				fileBuffer = undefined;
 				cb(error, file);
 			});
-
 		}
 	};
 
