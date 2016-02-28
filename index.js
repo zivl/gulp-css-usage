@@ -6,62 +6,62 @@ import traverse from 'babel-traverse';
 
 const PluginError = gutil.PluginError;
 const PLUGIN_NAME = 'gulp-css-usage';
-const cssClassRegex = /\.(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\})/gm;
+const cssSelectorRegex = /([.#](-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\}))/gm;
 
 let error = undefined;
 
-let getAllClassNamesFromCSSFile = (cssFile) => {
+let getAllSelectorsFromCSSFile = (cssFile) => {
 	let contents = cssFile.contents.toString();
-	let classNames = {};
-	let matches = cssClassRegex.exec(contents);
+	let selectors = {};
+	let matches = cssSelectorRegex.exec(contents);
 	while (matches != null) {
-		let className = matches[1];
-		classNames[className] = className;
-		matches = cssClassRegex.exec(contents);
+		let selector = matches[1];
+		selectors[selector] = selector;
+		matches = cssSelectorRegex.exec(contents);
 	}
 
-	return classNames;
+	return selectors;
 };
 
-let makeDiff = (cssClasses, jsxClasses) => {
+let makeDiff = (cssSelectors, jsxAttributes) => {
 	let needless = [];
-	Object.keys(cssClasses).forEach(className => {
-		if (!jsxClasses[className]) {
-			needless.push(`.${className}`);
+	Object.keys(cssSelectors).forEach(selector => {
+		if (!jsxAttributes[selector.substring(1)]) {
+			needless.push(selector);
 		}
 	});
 
 	return needless;
 };
 
-let printNeedlessClassList = (list) => {
+let printNeedlessSelectorList = (list) => {
 	gutil.log('');
-	gutil.log(gutil.colors.yellow(PLUGIN_NAME + ': The following class names are not in use'));
-	list.forEach(clazz => gutil.log(clazz));
+	gutil.log(gutil.colors.yellow(PLUGIN_NAME + ': The following selectors are not in use'));
+	list.forEach(selector => gutil.log(selector));
 	gutil.log('');
 };
 
-let parseAndExtractJsxClassNames = (jsxFileContents, babylonPlugins = []) => {
-	let jsxClassNames = {};
-	let plugins = ['jsx', 'classProperties'];
+let parseAndExtractJsxAttributes = (jsxFileContents, babylonPlugins = []) => {
+	let jsxAttributes = {};
+	let plugins = ['jsx', 'flow', 'classProperties'];
 	if(babylonPlugins.length) {
 		plugins = plugins.concat(babylonPlugins);
 	}
 
-	// use babylon.parse and then babel traverse for dynamic class names on the jsx code.
+	// use babylon.parse and then babel traverse for dynamic class names and other attributes on the jsx code.
 	// might come up with a bit more strings but the needless stuff are not here anyway.
 	let ast = parse(jsxFileContents, {sourceType: 'module', plugins: plugins});
 	traverse(ast, {
 		enter: function (path) {
 			let {type, value} = path.node;
 			if (type === 'StringLiteral') {
-				let classNames = value.split(' ');
-				classNames.forEach(className => jsxClassNames[className] = className);
+				let attributes = value.split(' ');
+				attributes.forEach(attr => jsxAttributes[attr] = attr);
 			}
 		}
 	});
 
-	return jsxClassNames;
+	return jsxAttributes;
 };
 
 let gulpCssUsage = (options = {}) => {
@@ -75,17 +75,17 @@ let gulpCssUsage = (options = {}) => {
 	}
 
 	let cssFile = new gutil.File({path: cssFilePath, contents: fs.readFileSync(cssFilePath)});
-	let cssClasses = getAllClassNamesFromCSSFile(cssFile);
+	let cssSelectors = getAllSelectorsFromCSSFile(cssFile);
 	let fileBuffer;
-	let allClassNames = {};
+	let allAttributes = {};
 	let transformers = (file, enc, cb) => {
-		let currentJsxClassNames;
+		let currentJsxAttributes;
 		if (file.isNull()) {
 			return cb(error, file);
 		}
 		if (file.isBuffer()) {
-			currentJsxClassNames = parseAndExtractJsxClassNames(file.contents.toString(), babylon);
-			Object.assign(allClassNames, currentJsxClassNames);
+			currentJsxAttributes = parseAndExtractJsxAttributes(file.contents.toString(), babylon);
+			Object.assign(allAttributes, currentJsxAttributes);
 			cb(error, file);
 		}
 		if (file.isStream()) {
@@ -99,8 +99,8 @@ let gulpCssUsage = (options = {}) => {
 
 			file.contents.on('data', chunk => fileBuffer = Buffer.concat([new Buffer(chunk), fileBuffer]));
 			file.contents.on('end', () => {
-				currentJsxClassNames = parseAndExtractJsxClassNames(fileBuffer.toString(), babylon);
-				Object.assign(allClassNames, currentJsxClassNames);
+				currentJsxAttributes = parseAndExtractJsxAttributes(fileBuffer.toString(), babylon);
+				Object.assign(allAttributes, currentJsxAttributes);
 				fileBuffer = undefined;
 				cb(error, file);
 			});
@@ -108,8 +108,8 @@ let gulpCssUsage = (options = {}) => {
 	};
 
 	let flush = (cb) => {
-		let needless = makeDiff(cssClasses, allClassNames);
-		printNeedlessClassList(needless);
+		let needless = makeDiff(cssSelectors, allAttributes);
+		printNeedlessSelectorList(needless);
 		cb();
 	};
 

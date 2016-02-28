@@ -39,7 +39,7 @@ The file path to the CSS file which this plug-in will test.<br>
 **Note:** at the moment, supports only one CSS file so it is prefer to give here the compiled/concatenated styling file)
 
 ### babylon
-Type: `Array:String` Default: `['jsx', 'classProperties']`
+Type: `Array:String` Default: `['jsx', 'flow', 'classProperties']`
 
 Array containing the plugins that you want to enable.<br>
 Since we're using `babel 6.4+` and `babylon` to parse and extract the class names from the `jsx` files,
@@ -58,7 +58,7 @@ For trouble in usage or unclear stuff, please use the awesome [StackOverflow](ht
 
 # Road map
 * write results to file
-* support of more CSS selectors, such as `#`,
+* support of more CSS selectors
 * support multiple CSS files
 * support of precompiled SCSS files as well
 

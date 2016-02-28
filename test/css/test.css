@@ -15,11 +15,11 @@
     white-space: normal;
 }
 
-#test > .my-class {
+#id-number-1 > .my-class {
     color: black;
 }
 
-#test[type="text"] {
+#id-number-2[type="text"] {
     color:green;
 }
 
