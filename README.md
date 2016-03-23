@@ -38,6 +38,13 @@ gulp.task('check-css-usage', function () {
 The file path to the CSS file which this plug-in will test.<br>
 **Note:** at the moment, supports only one CSS file so it is prefer to give here the compiled/concatenated styling file)
 
+### threshold
+Type: 'Number', (between 0-100)
+
+If set, `gulp-css-usage` will check the amount of unused selectors, and if the amount of it is above the threshold then it fails the task.
+
+
+
 ### babylon
 Type: `Array:String` Default: `['jsx', 'flow', 'classProperties']`
 
