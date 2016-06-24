@@ -1,7 +1,7 @@
 {
   "name": "gulp-css-usage",
-  "version": "2.0.1",
-  "description": "A Gulp task which scans your JavaScript classes, including React JSX files support (.jsx/.js), your CSS files, and gives you a report of CSS coverage. i.e how many class names are needless and which are those class names.",
+  "version": "2.0.2",
+  "description": "A Gulp task which scans your JavaScript classes, including React JSX files support (.jsx/.js), as well as HTML files, your CSS files, and gives you a report of CSS coverage. i.e how many class names are needless and which are those class names.",
   "keywords": [
     "gulpplugin",
     "gulp",
@@ -10,7 +10,8 @@
     "css",
     "usage",
     "class",
-    "classes"
+    "classes",
+    "coverage"
   ],
   "license": "MIT",
   "author": "Ziv Levy (https://github.com/zivl)",

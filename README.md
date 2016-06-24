@@ -1,6 +1,6 @@
 # gulp-css-usage
 
-A Gulp task which scans your JavaScript classes, including React JSX files support ( `.jsx` / `.js`  ), your CSS files, and gives you a report of CSS coverage.<br>
+A Gulp task which scans your JavaScript classes, including React JSX files support ( `.jsx` / `.js`  ) as well as HTML files, your CSS files, and gives you a report of CSS coverage.<br>
 .i.e how many class names are needless and which are those class names.
 
 In this way, you can tremendously accelerate the rendering time of your app by reducing network latency, loading and parsing time,

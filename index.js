@@ -7,6 +7,7 @@ import traverse from 'babel-traverse';
 const PluginError = gutil.PluginError;
 const PLUGIN_NAME = 'gulp-css-usage';
 const cssSelectorRegex = /([.#](-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\}))/gm;
+const htmlAttrRegex = /[="](-?[_a-zA-Z]+[_a-zA-Z0-9-]*)["]/gm;
 
 let error = undefined;
 
@@ -23,12 +24,12 @@ let getAllSelectorsFromCSSFile = (cssFile) => {
 	return selectors;
 };
 
-let makeDiff = (cssSelectors, jsxAttributes) => {
+let makeDiff = (cssSelectors, attributes) => {
 	let needless = [];
 
 	let cssSelectorKeys = Object.keys(cssSelectors);
 	cssSelectorKeys.forEach(selector => {
-		if (!jsxAttributes[selector.substring(1)]) {
+		if (!attributes[selector.substring(1)]) {
 			needless.push(selector);
 		}
 	});
@@ -70,6 +71,19 @@ let parseAndExtractJsxAttributes = (jsxFileContents, babylonPlugins = []) => {
 	return jsxAttributes;
 };
 
+let parseAndExtractHTMLAttributes = (htmlFile) => {
+	let contents = htmlFile.contents.toString();
+	let htmlAttributes = {};
+	let matches = htmlAttrRegex.exec(contents);
+	while (matches != null) {
+		let selector = matches[1];
+		htmlAttributes[selector] = selector;
+		matches = htmlAttrRegex.exec(contents);
+	}
+
+	return htmlAttributes;
+};
+
 let validateInput = (cssFilePath, threshold) => {
 	if (!cssFilePath) {
 		throw new PluginError(PLUGIN_NAME, 'Missing css field!');
@@ -80,6 +94,16 @@ let validateInput = (cssFilePath, threshold) => {
 	if (threshold && (typeof threshold !== 'number' || threshold > 100 || threshold < 0)) {
 		throw new PluginError(PLUGIN_NAME, 'threshold value should be a number between 0-100!');
 	}
+};
+
+let getFileExtension = file => file.path.split('.').pop();
+
+let isHTMLFile = (file) => {
+	return getFileExtension(file) === 'html';
+};
+
+let isJSXFile = (file) => {
+	return getFileExtension(file) === 'jsx';
 };
 
 let gulpCssUsage = (options = {}) => {
@@ -102,8 +126,14 @@ let gulpCssUsage = (options = {}) => {
 		}
 
 		// file is buffer
-		currentJsxAttributes = parseAndExtractJsxAttributes(file.contents.toString(), babylon);
-		Object.assign(allAttributes, currentJsxAttributes);
+		if(isJSXFile(file)){
+			currentJsxAttributes = parseAndExtractJsxAttributes(file.contents.toString(), babylon);
+			Object.assign(allAttributes, currentJsxAttributes);
+		}
+		else if(isHTMLFile(file)){
+			var htmlAttributes = parseAndExtractHTMLAttributes(file);
+			Object.assign(allAttributes, htmlAttributes);
+		}
 
 		cb(error, file);
 	};
