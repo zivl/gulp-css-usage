@@ -36,16 +36,32 @@ let makeDiff = (cssSelectors, attributes) => {
 
 	let statistics = ((needless.length / cssSelectorKeys.length) * 100).toFixed(0);
 
-
 	return {needless, statistics};
 };
 
-let printNeedlessSelectorList = (list, statistics) => {
+let printNeedlessSelectorList = (list, statistics, outputFile) => {
+	const summaryTextTitle = `${PLUGIN_NAME}: ${statistics}% of your css selectors are not in use!`;
+	const summaryTextSubtitle = `${PLUGIN_NAME}: The selectors are:`;
+
 	gutil.log('');
-	gutil.log(gutil.colors.yellow(PLUGIN_NAME + ': ' + statistics + '% of your css selectors are not in use!'));
-	gutil.log(gutil.colors.yellow(PLUGIN_NAME + ': The selectors are:'));
-	list.forEach(selector => gutil.log(selector));
+	gutil.log(gutil.colors.yellow(summaryTextTitle));
+	gutil.log(gutil.colors.yellow(summaryTextSubtitle));
+	list.forEach(selector => {
+		gutil.log(selector);
+	});
 	gutil.log('');
+
+	if (outputFile) {
+		const fileName = outputFile.indexOf('.txt') > -1 ? outputFile : `${outputFile}.txt`;
+		const file = fs.createWriteStream(fileName);
+		file.write(`${summaryTextTitle}\n`);
+		file.write(`${summaryTextSubtitle}\n`);
+		list.forEach(selector => {
+			file.write(`${selector}\n`)
+		});
+		file.end('');
+		gutil.log(`report was written to a file: ${outputFile}`);
+	}
 };
 
 let parseAndExtractJsxAttributes = (jsxFileContents, babylonPlugins = []) => {
@@ -108,7 +124,7 @@ let isJSXFile = (file) => {
 
 let gulpCssUsage = (options = {}) => {
 
-	let {css: cssFilePath, babylon, threshold} = options;
+	let {css: cssFilePath, babylon, threshold, outputFile} = options;
 
 	validateInput(cssFilePath, threshold);
 
@@ -126,11 +142,11 @@ let gulpCssUsage = (options = {}) => {
 		}
 
 		// file is buffer
-		if(isJSXFile(file)){
+		if (isJSXFile(file)) {
 			currentJsxAttributes = parseAndExtractJsxAttributes(file.contents.toString(), babylon);
 			Object.assign(allAttributes, currentJsxAttributes);
 		}
-		else if(isHTMLFile(file)){
+		else if (isHTMLFile(file)) {
 			var htmlAttributes = parseAndExtractHTMLAttributes(file);
 			Object.assign(allAttributes, htmlAttributes);
 		}
@@ -140,7 +156,7 @@ let gulpCssUsage = (options = {}) => {
 
 	let flush = (cb) => {
 		let {needless, statistics} = makeDiff(cssSelectors, allAttributes);
-		printNeedlessSelectorList(needless, statistics);
+		printNeedlessSelectorList(needless, statistics, outputFile);
 		if (threshold && statistics >= threshold) {
 			return cb(new PluginError(PLUGIN_NAME, 'too many unused css selectors!'));
 		}

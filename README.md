@@ -39,10 +39,9 @@ The file path to the CSS file which this plug-in will test.<br>
 **Note:** at the moment, supports only one CSS file so it is prefer to give here the compiled/concatenated styling file)
 
 ### threshold
-Type: 'Number', (between 0-100)
+Type: `Number`, (between 0-100)
 
 If set, `gulp-css-usage` will check the amount of unused selectors, and if the amount of it is above the threshold then it fails the task.
-
 
 
 ### babylon
@@ -56,6 +55,12 @@ you might need to add which plug-ins to enable to parse your code if you're usin
 
 For more available plug-ins, go to [babel-babylon](https://github.com/babel/babel/tree/master/packages/babylon)
 
+### outputFile
+Type: `String`
+
+A Path to a report file. If set, `gulp-css-usage` will write it's analysis both to console and to the file specified with a `.txt` extension.
+
+
 
 # Having some trouble? Have an issue?
 For bugs and issues, please use the [Issues](https://github.com/zivl/gulp-css-usage/issues) page.
@@ -64,7 +69,6 @@ For trouble in usage or unclear stuff, please use the awesome [StackOverflow](ht
 
 
 # Road map
-* write results to file
 * support of more CSS selectors
 * support multiple CSS files
 * support of precompiled SCSS files as well
