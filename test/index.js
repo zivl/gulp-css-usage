@@ -6,7 +6,7 @@ import gulp from 'gulp';
 import gutil from 'gulp-util';
 import gulpCssUsage from '../dist/index.js';
 
-let loadFileBuffer = (filename, folder) => {
+const loadFileBuffer = (filename, folder) => {
 	var base = path.join(__dirname, folder || 'jsx');
 	var filePath = path.join(base, filename);
 
@@ -17,6 +17,11 @@ let loadFileBuffer = (filename, folder) => {
 		contents: fs.readFileSync(filePath)
 	});
 };
+
+const cssFolder = path.join(__dirname, 'css');
+const cssTestFilePath = path.join(cssFolder, 'test.css');
+const jsxFolder = path.join(__dirname, 'jsx/**/*');
+const htmlFolder = path.join(__dirname, 'html/**/*');
 
 describe('main plug-in test', () => {
 
@@ -34,9 +39,7 @@ describe('main plug-in test', () => {
 
 		it('single css, single simple jsx - as buffer', done => {
 			let jsxFile = loadFileBuffer('TestReactClass.jsx');
-			let cssFolder = path.join(__dirname, 'css');
-			var filePath = path.join(cssFolder, 'test.css');
-			let stream = gulpCssUsage({css: filePath});
+			let stream = gulpCssUsage({css: cssTestFilePath});
 			stream.on('data', () => {
 			});
 			stream.on('end', () => done());
@@ -46,9 +49,7 @@ describe('main plug-in test', () => {
 
 		it('single css, single simple html - as buffer', done => {
 			let htmlFile = loadFileBuffer('test.html', 'html');
-			let cssFolder = path.join(__dirname, 'css');
-			var filePath = path.join(cssFolder, 'test.css');
-			let stream = gulpCssUsage({css: filePath});
+			let stream = gulpCssUsage({css: cssTestFilePath});
 			stream.on('data', () => {
 			});
 			stream.on('end', () => done());
@@ -63,9 +64,7 @@ describe('main plug-in test', () => {
 				loadFileBuffer('TestReactClass2.jsx')
 			];
 			let mustSee = files.length;
-			let cssFolder = path.join(__dirname, 'css');
-			var filePath = path.join(cssFolder, 'test.css');
-			let stream = gulpCssUsage({css: filePath});
+			let stream = gulpCssUsage({css: cssTestFilePath});
 			stream.on('data', () => mustSee--);
 			stream.on('end', () => {
 				if (mustSee <= 0) {
@@ -79,12 +78,10 @@ describe('main plug-in test', () => {
 		it('single css, multiple jsx files - as buffer', done => {
 			var files = [
 				loadFileBuffer('test.html', 'html'),
-				loadFileBuffer('test2.html', 'html'),
+				loadFileBuffer('test2.html', 'html')
 			];
 			let mustSee = files.length;
-			let cssFolder = path.join(__dirname, 'css');
-			var filePath = path.join(cssFolder, 'test.css');
-			let stream = gulpCssUsage({css: filePath});
+			let stream = gulpCssUsage({css: cssTestFilePath});
 			stream.on('data', () => mustSee--);
 			stream.on('end', () => {
 				if (mustSee <= 0) {
@@ -98,43 +95,29 @@ describe('main plug-in test', () => {
 	});
 
 	describe('use cases as real gulp plug-in', () => {
+
 		it('single css, multiple simple jsx', done => {
-			let cssFolder = path.join(__dirname, 'css');
-			let jsxFolder = path.join(__dirname, 'jsx/**/*');
-			var cssFilePath = path.join(cssFolder, 'test.css');
-			gulp.src(jsxFolder).pipe(gulpCssUsage({css: cssFilePath})).on('data', () => {
+			gulp.src(jsxFolder).pipe(gulpCssUsage({css: cssTestFilePath})).on('data', () => {
 			}).on('end', done);
 		});
 
 		it('single css, multiple HTMLs', done => {
-			let cssFolder = path.join(__dirname, 'css');
-			let jsxFolder = path.join(__dirname, 'html/**/*');
-			var cssFilePath = path.join(cssFolder, 'test.css');
-			gulp.src(jsxFolder).pipe(gulpCssUsage({css: cssFilePath})).on('data', () => {
+			gulp.src(htmlFolder).pipe(gulpCssUsage({css: cssTestFilePath})).on('data', () => {
 			}).on('end', done);
 		});
 
 		it('single css, multiple simple jsx, with threshold set', done => {
-			let cssFolder = path.join(__dirname, 'css');
-			let jsxFolder = path.join(__dirname, 'jsx/**/*');
-			var cssFilePath = path.join(cssFolder, 'test.css');
-			gulp.src(jsxFolder).pipe(gulpCssUsage({css: cssFilePath, threshold: 100})).on('data', () => {
+			gulp.src(jsxFolder).pipe(gulpCssUsage({css: cssTestFilePath, threshold: 100})).on('data', () => {
 			}).on('end', done);
 		});
 
 		it('single css, multiple HTMLs, with threshold set', done => {
-			let cssFolder = path.join(__dirname, 'css');
-			let htmlFolder = path.join(__dirname, 'html/**/*');
-			var cssFilePath = path.join(cssFolder, 'test.css');
-			gulp.src(htmlFolder).pipe(gulpCssUsage({css: cssFilePath, threshold: 100})).on('data', () => {
+			gulp.src(htmlFolder).pipe(gulpCssUsage({css: cssTestFilePath, threshold: 100})).on('data', () => {
 			}).on('end', done);
 		});
 	});
 
 	describe('some negative tests', () => {
-		let jsxFolder = path.join(__dirname, 'jsx/**/*');
-		let cssFolder = path.join(__dirname, 'css');
-		var cssFilePath = path.join(cssFolder, 'test.css');
 
 		it('should throw missing field - no options', done => {
 			(() => gulp.src(jsxFolder).pipe(gulpCssUsage())).should.throw('Missing css field!');
@@ -153,7 +136,7 @@ describe('main plug-in test', () => {
 
 		it('should throw threshold value exception', done => {
 			(() => gulp.src(jsxFolder).pipe(gulpCssUsage({
-				css: cssFilePath,
+				css: cssTestFilePath,
 				threshold: 200
 			}))).should.throw('threshold value should be a number between 0-100!');
 			done();
@@ -161,7 +144,7 @@ describe('main plug-in test', () => {
 
 		it('should throw threshold value exception', done => {
 			(() => gulp.src(jsxFolder).pipe(gulpCssUsage({
-				css: cssFilePath,
+				css: cssTestFilePath,
 				threshold: {}
 			}))).should.throw('threshold value should be a number between 0-100!');
 			done();
@@ -169,14 +152,14 @@ describe('main plug-in test', () => {
 
 		it('should throw threshold value exception', done => {
 			(() => gulp.src(jsxFolder).pipe(gulpCssUsage({
-				css: cssFilePath,
+				css: cssTestFilePath,
 				threshold: 'asd'
 			}))).should.throw('threshold value should be a number between 0-100!');
 			done();
 		});
 
 		it('should return error over the threshold value exception', done => {
-			gulp.src(jsxFolder).pipe(gulpCssUsage({css: cssFilePath, threshold: 30})).on('error', error => {
+			gulp.src(jsxFolder).pipe(gulpCssUsage({css: cssTestFilePath, threshold: 30})).on('error', error => {
 				error.message.indexOf('too many unused css selectors!').should.not.equal(-1);
 				done();
 			});
@@ -187,10 +170,8 @@ describe('main plug-in test', () => {
 
 		it('should write to given file', done => {
 			let jsxFile = loadFileBuffer('TestReactClass.jsx');
-			let cssFolder = path.join(__dirname, 'css');
-			let filePath = path.join(cssFolder, 'test.css');
 			let outputFile = 'dist/report.txt';
-			let stream = gulpCssUsage({css: filePath, outputFile});
+			let stream = gulpCssUsage({css: cssTestFilePath, outputFile});
 			stream.on('data', () => {
 			});
 			stream.on('end', () => {
@@ -203,10 +184,8 @@ describe('main plug-in test', () => {
 
 		it('should add .txt file extension and write to given file', done => {
 			let jsxFile = loadFileBuffer('TestReactClass.jsx');
-			let cssFolder = path.join(__dirname, 'css');
-			let filePath = path.join(cssFolder, 'test.css');
 			let outputFile = 'dist/report';
-			let stream = gulpCssUsage({css: filePath, outputFile});
+			let stream = gulpCssUsage({css: cssTestFilePath, outputFile});
 			stream.on('data', () => {
 			});
 			stream.on('end', () => {
