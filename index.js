@@ -1,6 +1,8 @@
 import through from 'through2';
 import gutil from 'gulp-util';
 import fs from 'fs';
+import glob from 'glob';
+import postcss from 'postcss';
 import {parse} from 'babylon';
 import traverse from 'babel-traverse';
 
@@ -24,29 +26,53 @@ let getAllSelectorsFromCSSFile = (cssFile) => {
 	return selectors;
 };
 
-let makeDiff = (cssSelectors, attributes) => {
+let makeDiff = (cssSelectors, attributes, templates) => {
 	let needless = [];
-
+	let probablyNeedless = [];
 	let cssSelectorKeys = Object.keys(cssSelectors);
 	cssSelectorKeys.forEach(selector => {
 		if (!attributes[selector.substring(1)]) {
 			needless.push(selector);
 		}
 	});
+	let templatesKeys = Object.keys(templates);
+	if (templatesKeys && templatesKeys.length) {
+		let newNeedless = [];
+		let isProbablyNeedless;
+		needless.forEach(selector => {
+			isProbablyNeedless = false;
+			templatesKeys.forEach(template => {
+				if (selector.indexOf(template) > -1) {
+					isProbablyNeedless = true;
+				}
+			})
+			if (isProbablyNeedless) {
+				probablyNeedless.push(selector)
+			} else {
+				newNeedless.push(selector)
+			}
+		});
+		needless = newNeedless;
+	}
+	let statistics = (((needless.length + probablyNeedless.length) / cssSelectorKeys.length) * 100).toFixed(0);
 
-	let statistics = ((needless.length / cssSelectorKeys.length) * 100).toFixed(0);
-
-	return {needless, statistics};
+	return {needless, probablyNeedless, statistics};
 };
 
-let printNeedlessSelectorList = (list, statistics, outputFile) => {
+let printNeedlessSelectorList = ({needless, probablyNeedless, statistics, outputFile}) => {
 	const summaryTextTitle = `${PLUGIN_NAME}: ${statistics}% of your css selectors are not in use!`;
-	const summaryTextSubtitle = `${PLUGIN_NAME}: The selectors are:`;
+	const summaryTextSubtitle = `${PLUGIN_NAME}: The needles selectors are:`;
+	const summaryTextProbablySubtitle = `${PLUGIN_NAME}: The probably needles selectors are:`;
 
 	gutil.log('');
 	gutil.log(gutil.colors.yellow(summaryTextTitle));
 	gutil.log(gutil.colors.yellow(summaryTextSubtitle));
-	list.forEach(selector => {
+	needless.forEach(selector => {
+		gutil.log(selector);
+	});
+	gutil.log('');
+	gutil.log(gutil.colors.yellow(summaryTextProbablySubtitle));
+	probablyNeedless.forEach(selector => {
 		gutil.log(selector);
 	});
 	gutil.log('');
@@ -56,7 +82,7 @@ let printNeedlessSelectorList = (list, statistics, outputFile) => {
 		const file = fs.createWriteStream(fileName);
 		file.write(`${summaryTextTitle}\n`);
 		file.write(`${summaryTextSubtitle}\n`);
-		list.forEach(selector => {
+		needless.forEach(selector => {
 			file.write(`${selector}\n`)
 		});
 		file.end('');
@@ -66,6 +92,7 @@ let printNeedlessSelectorList = (list, statistics, outputFile) => {
 
 let parseAndExtractJsxAttributes = (jsxFileContents, babylonPlugins = []) => {
 	let jsxAttributes = {};
+	let jsxTemplates = {};
 	let plugins = ['jsx', 'flow', 'classProperties'];
 	if (babylonPlugins.length) {
 		plugins = plugins.concat(babylonPlugins);
@@ -80,11 +107,13 @@ let parseAndExtractJsxAttributes = (jsxFileContents, babylonPlugins = []) => {
 			if (type === 'StringLiteral') {
 				let attributes = value.split(' ');
 				attributes.forEach(attr => jsxAttributes[attr] = attr);
+			} else if (type === 'TemplateElement' && value.raw) {
+				jsxTemplates[value.raw] = value.raw;
 			}
 		}
 	});
 
-	return jsxAttributes;
+	return {jsxAttributes, jsxTemplates};
 };
 
 let parseAndExtractHTMLAttributes = (htmlFile) => {
@@ -100,12 +129,12 @@ let parseAndExtractHTMLAttributes = (htmlFile) => {
 	return htmlAttributes;
 };
 
-let validateInput = (cssFilePath, threshold) => {
-	if (!cssFilePath) {
+let validateInput = (css, threshold) => {
+	if (!css) {
 		throw new PluginError(PLUGIN_NAME, 'Missing css field!');
 	}
-	if (typeof cssFilePath !== 'string') {
-		throw new PluginError(PLUGIN_NAME, 'css field must be a string!');
+	if (!Array.isArray(css) && typeof css !== 'string') {
+		throw new PluginError(PLUGIN_NAME, 'css must be an array or a string!');
 	}
 	if (threshold && (typeof threshold !== 'number' || threshold > 100 || threshold < 0)) {
 		throw new PluginError(PLUGIN_NAME, 'threshold value should be a number between 0-100!');
@@ -123,14 +152,27 @@ let isJSXFile = (file) => {
 };
 
 let gulpCssUsage = (options = {}) => {
+	let {css, babylon, threshold, outputFile} = options;
 
-	let {css: cssFilePath, babylon, threshold, outputFile} = options;
+	validateInput(css, threshold);
+	let cssSelectors = {}
+	let cssFile;
 
-	validateInput(cssFilePath, threshold);
+	// Backwards compatibility
+	if (typeof css === 'string') {
+		css = [css];
+	}
 
-	let cssFile = new gutil.File({path: cssFilePath, contents: fs.readFileSync(cssFilePath)});
-	let cssSelectors = getAllSelectorsFromCSSFile(cssFile);
+	css.forEach(pattern => {
+		let paths = glob.sync(pattern);
+		paths.forEach(path => {
+			cssFile = new gutil.File({path: path, contents: fs.readFileSync(path)});
+			cssSelectors = Object.assign(cssSelectors, getAllSelectorsFromCSSFile(cssFile));
+		});
+	});
+
 	let allAttributes = {};
+	let templates = {};
 
 	let transformers = (file, enc, cb) => {
 		let currentJsxAttributes;
@@ -143,8 +185,10 @@ let gulpCssUsage = (options = {}) => {
 
 		// file is buffer
 		if (isJSXFile(file)) {
-			currentJsxAttributes = parseAndExtractJsxAttributes(file.contents.toString(), babylon);
-			Object.assign(allAttributes, currentJsxAttributes);
+			let {jsxAttributes, jsxTemplates} = parseAndExtractJsxAttributes(file.contents.toString(), babylon);
+			Object.assign(allAttributes, jsxAttributes);
+			Object.assign(templates, jsxTemplates);
+
 		}
 		else if (isHTMLFile(file)) {
 			var htmlAttributes = parseAndExtractHTMLAttributes(file);
@@ -155,8 +199,8 @@ let gulpCssUsage = (options = {}) => {
 	};
 
 	let flush = (cb) => {
-		let {needless, statistics} = makeDiff(cssSelectors, allAttributes);
-		printNeedlessSelectorList(needless, statistics, outputFile);
+		let {needless, probablyNeedless, statistics} = makeDiff(cssSelectors, allAttributes, templates);
+		printNeedlessSelectorList({needless, probablyNeedless, statistics, outputFile});
 		if (threshold && statistics >= threshold) {
 			return cb(new PluginError(PLUGIN_NAME, 'too many unused css selectors!'));
 		}

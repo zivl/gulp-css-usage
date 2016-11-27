@@ -32,8 +32,10 @@
   "dependencies": {
     "babel-traverse": "^6.4.5",
     "babylon": "^6.4.5",
-    "through2": "^2.0.0",
-    "gulp-util": "^3.0.7"
+    "glob": "^7.1.1",
+    "gulp-util": "^3.0.7",
+    "postcss": "^5.2.6",
+    "through2": "^2.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.4.5",

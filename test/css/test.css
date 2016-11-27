@@ -31,8 +31,28 @@
     color: rebeccapurple;
 }
 
+/*.commented {
+	color: green;
+}*/
+
 .only-in-html {
     color: darkcyan;
+}
+
+.variable-wrapper {
+	color: black;
+}
+
+.without-variable {
+	color: yellow;
+}
+
+.with-variable-3 {
+	color: red;
+}
+
+.with-variable-4 {
+	color: white;
 }
 
 
