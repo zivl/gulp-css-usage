@@ -17,7 +17,7 @@ npm install gulp-css-usage --save-dev
 ```javascript
 // ECMAScript 5 code, using require()
 var gulp = require('gulp');
-var cssusage = require('gulp-css-usage').default;
+var gulpCssUsage = require('gulp-css-usage').default;
 ```
 ```javascript
 // ECMAScript 6 code, using module import
@@ -31,12 +31,30 @@ gulp.task('check-css-usage', function () {
     .pipe(gulpCssUsage({css: '/.../path/to/your/css/file/style.css', babylon:[]}));
 });
 ```
+###### console output
+```
+// selectors that matched complete strings in js files
+needless selectors:
+.myClass
+#myId
+
+// selectors that partialy matched an ES6 template string in js files
+probably needless selectors:
+.myClassTemplate
+#myIdTemplate
+```
 ## options
 ### css
-**mandatory** Type: `String`
+**mandatory** Type: `String` || `Array`
 
-The file path to the CSS file which this plug-in will test.<br>
-**Note:** at the moment, supports only one CSS file so it is prefer to give here the compiled/concatenated styling file)
+The file path/pattern to the CSS file which this plug-in will test.<br>
+Supports multiple files either via glob pattern or via array of paths/patterns.
+
+e.g.
+```javascript
+gulpCssUsage({css: '/.../path/to/css/*.css'});
+gulpCssUsage({css: ['/.../path/to/css/*.css', '/.../another/path/*.css', '/.../just/a/file/style.css']});
+```
 
 ### threshold
 Type: `Number`, (between 0-100)
@@ -70,10 +88,7 @@ For trouble in usage or unclear stuff, please use the awesome [StackOverflow](ht
 
 # Road map
 * support of more CSS selectors
-* support multiple CSS files
 * support of precompiled SCSS files as well
 
 # Contribute
 Sure! just fork this repository and join in!
-
-

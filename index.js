@@ -85,6 +85,10 @@ let printNeedlessSelectorList = ({needless, probablyNeedless, statistics, output
 		needless.forEach(selector => {
 			file.write(`${selector}\n`)
 		});
+		file.write(summaryTextProbablySubtitle);
+		probablyNeedless.forEach(selector => {
+			file.write(selector);
+		});
 		file.end('');
 		gutil.log(`report was written to a file: ${outputFile}`);
 	}
