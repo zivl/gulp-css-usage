@@ -20,7 +20,7 @@ const loadFileBuffer = (filename, folder) => {
 
 const cssFolder = path.join(__dirname, 'css');
 const cssTestFilePath = path.join(cssFolder, 'test.css');
-const jsxFolder = path.join(__dirname, 'jsx/**/*');
+const jsxFolder = path.join(__dirname, 'jsx/**/*.jsx');
 const htmlFolder = path.join(__dirname, 'html/**/*');
 
 describe('main plug-in test', () => {
@@ -61,7 +61,8 @@ describe('main plug-in test', () => {
 		it('single css, multiple jsx files - as buffer', done => {
 			var files = [
 				loadFileBuffer('TestReactClass.jsx'),
-				loadFileBuffer('TestReactClass2.jsx')
+				loadFileBuffer('TestReactClass2.jsx'),
+				loadFileBuffer('TestDynamicClass.jsx')
 			];
 			let mustSee = files.length;
 			let stream = gulpCssUsage({css: cssTestFilePath});
@@ -75,7 +76,7 @@ describe('main plug-in test', () => {
 			stream.end();
 		});
 
-		it('single css, multiple jsx files - as buffer', done => {
+		it('single css, multiple html files - as buffer', done => {
 			var files = [
 				loadFileBuffer('test.html', 'html'),
 				loadFileBuffer('test2.html', 'html')
@@ -97,7 +98,17 @@ describe('main plug-in test', () => {
 	describe('use cases as real gulp plug-in', () => {
 
 		it('single css, multiple simple jsx', done => {
-			gulp.src(jsxFolder).pipe(gulpCssUsage({css: cssTestFilePath})).on('data', () => {
+			gulp.src(jsxFolder).pipe(gulpCssUsage({css: cssTestFilePath })).on('data', () => {
+			}).on('end', done);
+		});
+
+		it('multiple css (as pattern), multiple simple jsx', done => {
+			gulp.src(jsxFolder).pipe(gulpCssUsage({css: path.join(cssFolder, '*.css') })).on('data', () => {
+			}).on('end', done);
+		});
+
+		it('multiple css (as array of files), multiple simple jsx', done => {
+			gulp.src(jsxFolder).pipe(gulpCssUsage({css: [cssTestFilePath, path.join(cssFolder, 'test2.css')] })).on('data', () => {
 			}).on('end', done);
 		});
 
@@ -130,7 +141,7 @@ describe('main plug-in test', () => {
 		});
 
 		it('should throw type checked exception - wrong options.css type', done => {
-			(() => gulp.src(jsxFolder).pipe(gulpCssUsage({css: {}}))).should.throw('css field must be a string!');
+			(() => gulp.src(jsxFolder).pipe(gulpCssUsage({css: {}}))).should.throw('css must be an array or a string!');
 			done();
 		});
 
