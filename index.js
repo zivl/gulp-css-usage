@@ -8,7 +8,6 @@ import traverse from 'babel-traverse';
 
 const PluginError = gutil.PluginError;
 const PLUGIN_NAME = 'gulp-css-usage';
-const cssSelectorRegex = /([.#](-?[_a-zA-Z]+[_a-zA-Z0-9-]*)(?![^\{]*\}))/gm;
 const htmlAttrRegex = /[="](-?[_a-zA-Z]+[_a-zA-Z0-9-]*)["]/gm;
 
 let error = undefined;
@@ -16,13 +15,15 @@ let error = undefined;
 let getAllSelectorsFromCSSFile = (cssFile) => {
 	let contents = cssFile.contents.toString();
 	let selectors = {};
-	let matches = cssSelectorRegex.exec(contents);
-	while (matches != null) {
-		let selector = matches[1];
-		selectors[selector] = selector;
-		matches = cssSelectorRegex.exec(contents);
-	}
-
+	const ast = postcss.parse(contents, {from: cssFile.path});
+	ast.walkRules(rule => {
+		let seperatedSelectors = rule.selector.split(/(\s|>|\[|,)/);
+		seperatedSelectors.forEach(selector => {
+			if (selector.startsWith('.') || selector.startsWith('#')) {
+				selectors[selector] = selector;
+			}
+		});
+	})
 	return selectors;
 };
 
@@ -55,7 +56,6 @@ let makeDiff = (cssSelectors, attributes, templates) => {
 		needless = newNeedless;
 	}
 	let statistics = (((needless.length + probablyNeedless.length) / cssSelectorKeys.length) * 100).toFixed(0);
-
 	return {needless, probablyNeedless, statistics};
 };
 
