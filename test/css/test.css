@@ -23,6 +23,10 @@
     color:green;
 }
 
+.two.classes {
+	color: pink;
+}
+
 .test-no-2, .test-no-3 {
     color: yellow;
 }
