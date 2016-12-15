@@ -17,7 +17,7 @@ let getAllSelectorsFromCSSFile = (cssFile) => {
 	let selectors = {};
 	const ast = postcss.parse(contents, {from: cssFile.path});
 	ast.walkRules(rule => {
-		let seperatedSelectors = rule.selector.split(/(\s|>|\[|,)/);
+		let seperatedSelectors = rule.selector.split(/(\s|>|\[|,|(?=\.))/);
 		seperatedSelectors.forEach(selector => {
 			if (selector.startsWith('.') || selector.startsWith('#')) {
 				selectors[selector] = selector;
