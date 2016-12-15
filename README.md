@@ -1,5 +1,7 @@
 # gulp-css-usage
 
+[![Build Status](https://travis-ci.org/zivl/gulp-css-usage.svg?branch=master)](https://travis-ci.org/zivl/gulp-css-usage)
+
 A Gulp task which scans your JavaScript classes, including React JSX files support ( `.jsx` / `.js`  ) as well as HTML files, your CSS files, and gives you a report of CSS coverage.<br>
 .i.e how many class names are needless and which are those class names.
 
