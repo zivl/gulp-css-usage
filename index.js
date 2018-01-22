@@ -1,12 +1,15 @@
 import through from 'through2';
-import gutil from 'gulp-util';
 import fs from 'fs';
 import glob from 'glob';
 import postcss from 'postcss';
 import {parse} from 'babylon';
 import traverse from 'babel-traverse';
+import log from 'fancy-log';
+import colors from 'ansi-colors';
+import PluginError from 'plugin-error';
+import Vinyl from 'vinyl';
 
-const PluginError = gutil.PluginError;
+//const PluginError = gutil.PluginError;
 const PLUGIN_NAME = 'gulp-css-usage';
 const htmlAttrRegex = /[="](-?[_a-zA-Z]+[_a-zA-Z0-9-]*)["]/gm;
 
@@ -64,18 +67,18 @@ let printNeedlessSelectorList = ({needless, probablyNeedless, statistics, output
 	const summaryTextSubtitle = `${PLUGIN_NAME}: The needles selectors are:`;
 	const summaryTextProbablySubtitle = `${PLUGIN_NAME}: The probably needles selectors are:`;
 
-	gutil.log('');
-	gutil.log(gutil.colors.yellow(summaryTextTitle));
-	gutil.log(gutil.colors.yellow(summaryTextSubtitle));
+	log('');
+	log(colors.yellow(summaryTextTitle));
+	log(colors.yellow(summaryTextSubtitle));
 	needless.forEach(selector => {
-		gutil.log(selector);
+		log(selector);
 	});
-	gutil.log('');
-	gutil.log(gutil.colors.yellow(summaryTextProbablySubtitle));
+	log('');
+	log(colors.yellow(summaryTextProbablySubtitle));
 	probablyNeedless.forEach(selector => {
-		gutil.log(selector);
+		log(selector);
 	});
-	gutil.log('');
+	log('');
 
 	if (outputFile) {
 		const fileName = outputFile.indexOf('.txt') > -1 ? outputFile : `${outputFile}.txt`;
@@ -90,7 +93,7 @@ let printNeedlessSelectorList = ({needless, probablyNeedless, statistics, output
 			file.write(selector);
 		});
 		file.end('');
-		gutil.log(`report was written to a file: ${outputFile}`);
+		log(`report was written to a file: ${outputFile}`);
 	}
 };
 
@@ -170,7 +173,7 @@ let gulpCssUsage = (options = {}) => {
 	css.forEach(pattern => {
 		let paths = glob.sync(pattern);
 		paths.forEach(path => {
-			cssFile = new gutil.File({path: path, contents: fs.readFileSync(path)});
+			cssFile = new Vinyl({path: path, contents: fs.readFileSync(path)});		
 			cssSelectors = Object.assign(cssSelectors, getAllSelectorsFromCSSFile(cssFile));
 		});
 	});
